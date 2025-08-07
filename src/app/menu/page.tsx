@@ -127,7 +127,7 @@ export default function MenuPage() {
   })
 
   const agregarPlato = () => {
-    const plato: Plato = {
+    const platoCompleto: Plato = {
       id: platos.length + 1,
       nombre: nuevoPlato.nombre,
       descripcion: nuevoPlato.descripcion,
@@ -135,10 +135,16 @@ export default function MenuPage() {
       categoria: nuevoPlato.categoria,
       ingredientes: nuevoPlato.ingredientes,
       tiempoPreparacion: nuevoPlato.tiempoPreparacion,
-      disponible: verificarDisponibilidad({ ...nuevoPlato, id: 0, destacado: false, ultimaActualizacion: '' }),
+      disponible: false, // Se calculará después
       destacado: false,
       ultimaActualizacion: new Date().toLocaleString()
     }
+    
+    const plato: Plato = {
+      ...platoCompleto,
+      disponible: verificarDisponibilidad(platoCompleto)
+    }
+    
     setPlatos([...platos, plato])
     setNuevoPlato({
       nombre: '',

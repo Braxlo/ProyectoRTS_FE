@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { 
@@ -17,9 +17,12 @@ import {
   Settings,
   LogOut,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Palette,
+  Globe
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { useAuth } from '@/hooks/useAuth'
 
 // Tipos para las APIs de pantalla completa
 interface FullscreenElement extends HTMLElement {
@@ -35,17 +38,20 @@ interface FullscreenDocument extends Document {
 }
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: Home, badge: null },
+  { name: 'Dashboard', href: '/dashboard', icon: Home, badge: null },
   { name: 'Mesas', href: '/mesas', icon: Users, badge: '12' },
   { name: 'Órdenes', href: '/ordenes', icon: Menu, badge: '8' },
   { name: 'Almacén', href: '/almacen', icon: Package, badge: '3' },
   { name: 'Menú', href: '/menu', icon: Utensils, badge: null },
   { name: 'Alertas', href: '/alertas', icon: AlertTriangle, badge: '5' },
   { name: 'Reportes', href: '/reportes', icon: BarChart3, badge: null },
+  { name: 'Configuración', href: '/configuracion', icon: Settings, badge: null },
 ]
 
 export default function Navigation() {
   const pathname = usePathname()
+  const router = useRouter()
+  const { user, restaurant, logout } = useAuth()
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
@@ -99,54 +105,46 @@ export default function Navigation() {
     }
   }
 
+  const handleLogout = () => {
+    logout()
+    router.push('/auth/login')
+  }
+
   return (
-    <nav className="bg-white shadow-lg border-b border-gray-200">
+    <nav className="bg-white shadow-sm border-b border-gray-200">
       <div className="max-w-1xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          {/* Logo and Brand */}
-          <div className="flex items-center">
+          {/* Logo y navegación principal */}
+          <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-3">
-                <Utensils className="h-5 w-5 text-white" />
-              </div>
-              <h1 className="text-xl font-bold text-gray-900 hidden sm:block">
-                RestauranteApp
-              </h1>
-              <h1 className="text-lg font-bold text-gray-900 sm:hidden">
-                RestApp
-              </h1>
+              <Link href="/dashboard" className="flex items-center">
+                <Utensils className="h-8 w-8 text-blue-600" />
+                <span className="ml-2 text-xl font-bold text-gray-900">
+                  {restaurant?.name || 'Sistema de Gestión'}
+                </span>
+              </Link>
             </div>
             
-            {/* Desktop Navigation */}
-            <div className="hidden lg:ml-8 lg:flex lg:space-x-1">
+            {/* Navegación desktop */}
+            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
               {navigation.map((item) => {
                 const isActive = pathname === item.href
                 return (
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`relative inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
                       isActive
-                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        ? 'border-blue-500 text-gray-900'
+                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                     }`}
                   >
-                    <item.icon className={`h-4 w-4 mr-2 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
-                    <span className="hidden xl:inline">{item.name}</span>
+                    <item.icon className="h-4 w-4 mr-2" />
+                    {item.name}
                     {item.badge && (
-                      <Badge 
-                        variant="secondary" 
-                        className={`ml-2 text-xs ${
-                          isActive 
-                            ? 'bg-blue-100 text-blue-700' 
-                            : 'bg-gray-100 text-gray-600'
-                        }`}
-                      >
+                      <Badge variant="secondary" className="ml-2 text-xs">
                         {item.badge}
                       </Badge>
-                    )}
-                    {isActive && (
-                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full"></div>
                     )}
                   </Link>
                 )
@@ -154,128 +152,136 @@ export default function Navigation() {
             </div>
           </div>
 
-          {/* Right side - User menu and notifications */}
-          <div className="flex items-center space-x-2 sm:space-x-4">
-            {/* Fullscreen Button */}
+          {/* Acciones del lado derecho */}
+          <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-4">
+            {/* Landing Page Link */}
+            <Link href="/">
+              <Button variant="ghost" size="sm" className="hidden sm:flex items-center gap-2 text-gray-600 hover:text-gray-900">
+                <Globe className="h-4 w-4" />
+                <span className="hidden xl:inline text-xs">Landing</span>
+              </Button>
+            </Link>
+
+            {/* Botón de pantalla completa */}
             <Button
               variant="ghost"
               size="sm"
               onClick={toggleFullscreen}
-              className="hidden sm:flex items-center gap-2 text-gray-600 hover:text-gray-900"
-              title={isFullscreen ? "Salir de pantalla completa (F11)" : "Pantalla completa (F11)"}
+              className="text-gray-600 hover:text-gray-900"
             >
               {isFullscreen ? (
                 <Minimize2 className="h-4 w-4" />
               ) : (
                 <Maximize2 className="h-4 w-4" />
               )}
-              <span className="hidden xl:inline text-xs">
-                {isFullscreen ? 'Salir' : 'Pantalla'}
-              </span>
             </Button>
 
-            {/* Notifications */}
-            <Button variant="ghost" size="sm" className="relative">
-              <Bell className="h-5 w-5 text-gray-600" />
-              <Badge 
-                variant="destructive" 
-                className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
-              >
-                3
-              </Badge>
+            {/* Notificaciones */}
+            <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">
+              <Bell className="h-4 w-4" />
             </Button>
 
-            {/* User Menu */}
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              <div className="hidden sm:flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center">
-                  <User className="h-4 w-4 text-white" />
-                </div>
-                <div className="text-sm hidden lg:block">
-                  <p className="font-medium text-gray-900">Administrador</p>
-                  <p className="text-gray-500">Gerente</p>
-                </div>
+            {/* Información del usuario */}
+            <div className="flex items-center space-x-3">
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+                <p className="text-xs text-gray-500">{user?.position || user?.role}</p>
               </div>
-              
-              <div className="flex items-center space-x-1 sm:space-x-2">
-                <Button variant="ghost" size="sm" className="hidden sm:flex">
-                  <Settings className="h-4 w-4 text-gray-600" />
-                </Button>
-                <Button variant="outline" size="sm" className="border-red-200 text-red-600 hover:bg-red-50 text-xs sm:text-sm">
-                  <LogOut className="h-4 w-4 mr-1" />
-                  <span className="hidden sm:inline">Salir</span>
-                </Button>
+              <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                <User className="h-4 w-4 text-blue-600" />
               </div>
             </div>
 
-            {/* Mobile menu button */}
+            {/* Botón de logout */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="text-gray-600 hover:text-red-600"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Botón de menú móvil */}
+          <div className="flex items-center sm:hidden">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden"
+              className="text-gray-600 hover:text-gray-900"
             >
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+              <Menu className="h-6 w-6" />
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Navigation */}
-      <div className={`lg:hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-        <div className="px-2 pt-2 pb-3 space-y-1 bg-gray-50 border-t">
-          {navigation.map((item) => {
-            const isActive = pathname === item.href
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  isActive
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                <item.icon className={`h-4 w-4 mr-3 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
-                {item.name}
-                {item.badge && (
-                  <Badge 
-                    variant="secondary" 
-                    className={`ml-auto text-xs ${
-                      isActive 
-                        ? 'bg-blue-200 text-blue-700' 
-                        : 'bg-gray-200 text-gray-600'
-                    }`}
-                  >
-                    {item.badge}
-                  </Badge>
-                )}
-              </Link>
-            )
-          })}
-          
-          {/* Mobile Fullscreen Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              toggleFullscreen()
-              setIsMobileMenuOpen(false)
-            }}
-            className="w-full mt-2 justify-start"
-          >
-            {isFullscreen ? (
-              <Minimize2 className="h-4 w-4 mr-3" />
-            ) : (
-              <Maximize2 className="h-4 w-4 mr-3" />
-            )}
-            {isFullscreen ? 'Salir de Pantalla Completa' : 'Pantalla Completa'}
-          </Button>
+      {/* Menú móvil */}
+      {isMobileMenuOpen && (
+        <div className="sm:hidden">
+          <div className="pt-2 pb-3 space-y-1">
+            {navigation.map((item) => {
+              const isActive = pathname === item.href
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`flex items-center px-3 py-2 text-base font-medium rounded-lg transition-colors ${
+                    isActive
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                >
+                  <item.icon className="h-4 w-4 mr-3 text-gray-500" />
+                  {item.name}
+                  {item.badge && (
+                    <Badge variant="secondary" className="ml-auto text-xs">
+                      {item.badge}
+                    </Badge>
+                  )}
+                </Link>
+              )
+            })}
+            
+            {/* Landing Page Link */}
+            <Link
+              href="/"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center px-3 py-2 text-base font-medium rounded-lg transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+            >
+              <Globe className="h-4 w-4 mr-3 text-gray-500" />
+              Landing Page
+            </Link>
+
+            {/* Información del usuario móvil */}
+            <div className="border-t border-gray-200 pt-4 pb-3">
+              <div className="flex items-center px-3">
+                <div className="flex-shrink-0">
+                  <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                    <User className="h-4 w-4 text-blue-600" />
+                  </div>
+                </div>
+                <div className="ml-3">
+                  <p className="text-base font-medium text-gray-800">{user?.name}</p>
+                  <p className="text-sm text-gray-500">{user?.position || user?.role}</p>
+                </div>
+              </div>
+              <div className="mt-3 space-y-1">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-gray-600 hover:text-red-600"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="h-4 w-4 mr-3" />
+                  Cerrar sesión
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </nav>
   )
-} 
+}

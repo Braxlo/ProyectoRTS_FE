@@ -3,7 +3,20 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Maximize2, Minimize2, Monitor, Smartphone, Tablet } from 'lucide-react'
+import { Maximize2, Minimize2, Monitor, Tablet, Smartphone } from 'lucide-react'
+
+// Tipos para las APIs de pantalla completa
+interface FullscreenElement extends HTMLElement {
+  webkitRequestFullscreen?: () => Promise<void>
+  mozRequestFullScreen?: () => Promise<void>
+  msRequestFullscreen?: () => Promise<void>
+}
+
+interface FullscreenDocument extends Document {
+  webkitExitFullscreen?: () => Promise<void>
+  mozCancelFullScreen?: () => Promise<void>
+  msExitFullscreen?: () => Promise<void>
+}
 
 export default function FullscreenButton() {
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -25,17 +38,13 @@ export default function FullscreenButton() {
       }
     }
 
-    // Detectar tipo de dispositivo inicial
-    handleResize()
-
-    // Event listeners para pantalla completa
     document.addEventListener('fullscreenchange', handleFullscreenChange)
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange)
     document.addEventListener('mozfullscreenchange', handleFullscreenChange)
     document.addEventListener('MSFullscreenChange', handleFullscreenChange)
-
-    // Event listener para cambios de tamaño de ventana
     window.addEventListener('resize', handleResize)
+
+    handleResize()
 
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange)
@@ -49,26 +58,28 @@ export default function FullscreenButton() {
   const toggleFullscreen = async () => {
     try {
       if (!isFullscreen) {
-        // Entrar en pantalla completa
-        if (document.documentElement.requestFullscreen) {
-          await document.documentElement.requestFullscreen()
-        } else if (document.documentElement.webkitRequestFullscreen) {
-          await document.documentElement.webkitRequestFullscreen()
-        } else if (document.documentElement.mozRequestFullScreen) {
-          await document.documentElement.mozRequestFullScreen()
-        } else if (document.documentElement.msRequestFullscreen) {
-          await document.documentElement.msRequestFullscreen()
+        // Entrar en pantalla completa con tipos seguros
+        const element = document.documentElement as FullscreenElement
+        if (element.requestFullscreen) {
+          await element.requestFullscreen()
+        } else if (element.webkitRequestFullscreen) {
+          await element.webkitRequestFullscreen()
+        } else if (element.mozRequestFullScreen) {
+          await element.mozRequestFullScreen()
+        } else if (element.msRequestFullscreen) {
+          await element.msRequestFullscreen()
         }
       } else {
-        // Salir de pantalla completa
-        if (document.exitFullscreen) {
-          await document.exitFullscreen()
-        } else if (document.webkitExitFullscreen) {
-          await document.webkitExitFullscreen()
-        } else if (document.mozCancelFullScreen) {
-          await document.mozCancelFullScreen()
-        } else if (document.msExitFullscreen) {
-          await document.msExitFullscreen()
+        // Salir de pantalla completa con tipos seguros
+        const doc = document as FullscreenDocument
+        if (doc.exitFullscreen) {
+          await doc.exitFullscreen()
+        } else if (doc.webkitExitFullscreen) {
+          await doc.webkitExitFullscreen()
+        } else if (doc.mozCancelFullScreen) {
+          await doc.mozCancelFullScreen()
+        } else if (doc.msExitFullscreen) {
+          await doc.msExitFullscreen()
         }
       }
     } catch (error) {

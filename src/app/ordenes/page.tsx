@@ -69,7 +69,8 @@ export default function OrdenesPage() {
       estado: 'listo',
       total: 12.50,
       horaCreacion: '2024-01-15 15:15',
-      horaEntrega: '2024-01-15 15:45'
+      horaEntrega: '2024-01-15 15:45',
+      notas: ''
     }
   ])
 

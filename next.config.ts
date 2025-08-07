@@ -23,7 +23,6 @@ const nextConfig: NextConfig = {
     return config;
   },
   // Configuración para mejorar la estabilidad
-  swcMinify: true,
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,

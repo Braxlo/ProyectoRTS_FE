@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Navigation from "@/components/Navigation";
 import NotificationToast from "@/components/NotificationToast";
 import FullscreenButton from "@/components/FullscreenButton";
 import FullscreenHelp from "@/components/FullscreenHelp";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import ChunkErrorHandler from "@/components/ChunkErrorHandler";
 import { Toaster } from "@/components/ui/sonner";
+import ConditionalNavigation from "@/components/ConditionalNavigation";
+import { AuthProvider } from "@/hooks/useAuth";
 
 const geist = Geist({
   variable: "--font-geist-sans",
@@ -33,15 +34,17 @@ export default function RootLayout({
     <html lang="es">
       <body className={`${geist.variable} ${geistMono.variable} antialiased`}>
         <ErrorBoundary>
-          <ChunkErrorHandler />
-          <Navigation />
-          <main>
-            {children}
-          </main>
-          <NotificationToast />
-          <FullscreenButton />
-          <FullscreenHelp />
-          <Toaster />
+          <AuthProvider>
+            <ChunkErrorHandler />
+            <ConditionalNavigation />
+            <main>
+              {children}
+            </main>
+            <NotificationToast />
+            <FullscreenButton />
+            <FullscreenHelp />
+            <Toaster />
+          </AuthProvider>
         </ErrorBoundary>
       </body>
     </html>
